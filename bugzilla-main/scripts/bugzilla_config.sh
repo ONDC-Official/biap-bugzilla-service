@@ -18,11 +18,7 @@ cd $BUGZILLA_WWW
 
 sed -i "s|$db_driver = 'mysql'|$db_driver = 'Sqlite' |g" localconfig
 
-# sed -i -e "s|__base_url__|$BUGZILLA_EXTERNAL_URI|g" localconfig
-
-# sed -i -e "s|__admin_email__|$BUGZILLA_ADMIN_EMAIL|g" localconfig
-
-printf "$BUGZILLA_ADMIN_EMAIL\n" | perl checksetup.pl checksetup_answers.txt
+perl checksetup.pl checksetup_answers.txt
 
 sed -i "s|$db_driver = 'mysql'|$db_driver = 'Sqlite' |g" localconfig
 perl checksetup.pl checksetup_answers.txt
