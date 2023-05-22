@@ -48,6 +48,7 @@ class BugzillaBugService {
       bpp_id: req.body.bpp_id,
       bpp_name: req.body.bpp_name,
       attachments: req.body.attachments,
+      action: req.body.action,
     }
 
     try {
@@ -91,6 +92,10 @@ class BugzillaBugService {
         })
       }
 
+      const complaint_actions_merged = [...data.action.complainant_actions, ...data.action.respondent_actions]
+
+      const sortedDataByDate = this.sortByDate(complaint_actions_merged)
+
       const createBug = new GetHttpRequest({
         url: '/rest/bug',
         method: 'post',
@@ -115,6 +120,14 @@ class BugzillaBugService {
         })
       }
 
+      if (response.data) {
+        for (const item of sortedDataByDate) {
+          const comment = this.generateTheCommentFromObject(item)
+
+          await this.addComments({ bugId: response.data.id, data: comment })
+        }
+      }
+
       return res.status(201).json({ success: true, data: response?.data, alias: data.alias })
     } catch (error: any) {
       logger.error(error)
@@ -122,6 +135,28 @@ class BugzillaBugService {
     }
   }
 
+  sortByDate(array: any) {
+    return array.sort((a: any, b: any) => {
+      const dateA: any = new Date(a.updated_at)
+      const dateB: any = new Date(b.updated_at)
+      return dateA - dateB
+    })
+  }
+
+  async addComments({ bugId, data }: { bugId: string; data: any }) {
+    const getAttachment = new GetHttpRequest({
+      url: `/rest/bug/${bugId}/comment`,
+      method: 'post',
+      data: {
+        comment: data,
+      },
+      headers: { 'X-BUGZILLA-API-KEY': process.env.BUGZILLA_API_KEY },
+    })
+
+    const getAttachmentResponse = await getAttachment.send()
+
+    return getAttachmentResponse?.data
+  }
   async getAttachment({ bugId }: { bugId: string }) {
     const getAttachment = new GetHttpRequest({
       url: `/rest/bug/${bugId}/attachment`,
@@ -153,20 +188,22 @@ class BugzillaBugService {
   }
 
   async updateBug(req: Request, res: Response) {
-    function getStatus(status: string) {
-      switch (status) {
-        case 'RESOLVED':
-          return { status: req.body.status, resolution: 'FIXED' }
-        default:
-          return { status: req.body.status }
+    const complaint_actions_merged = [...req.body.action.complainant_actions, ...req.body.action.respondent_actions]
+
+    const latestIssueAction = complaint_actions_merged.reduce((last, current) => {
+      if (current.updated_at > last.updated_at) {
+        return current
       }
-    }
+      return last
+    })
 
     try {
+      const latestCommit = this.generateTheCommentFromObject(latestIssueAction)
+
       const getInstance = new GetHttpRequest({
         url: `/rest/bug/${req.params.id}`,
         method: 'put',
-        data: getStatus(req.body.status),
+        data: this.getStatus(req.body.status, latestCommit),
         headers: { 'X-BUGZILLA-API-KEY': process.env.BUGZILLA_API_KEY },
       })
 
@@ -176,6 +213,39 @@ class BugzillaBugService {
     } catch (error: any) {
       logger.error(error)
       return res.status(500).json({ error: true, message: error?.message || 'Something went wrong' })
+    }
+  }
+
+  getStatus(status: string, comments: string) {
+    switch (status) {
+      case 'RESOLVED':
+        return {
+          status: 'RESOLVED',
+          resolution: 'FIXED',
+          comment: {
+            body: comments,
+          },
+        }
+      default:
+        return {
+          status: status,
+          comment: {
+            body: comments,
+          },
+        }
+    }
+  }
+
+  generateTheCommentFromObject(item: any) {
+    const keys = Object.keys(item)
+
+    switch (keys[0]) {
+      case 'complainant_action':
+        return `\nAction Taken: ${item.complainant_action}\nAction Comment:  ${item.short_desc}\nAction Taken By: Complainant\nAction Taken At:  ${item.updated_at}`
+      case 'respondent_action':
+        return `Action Taken: ${item.respondent_action}\nAction Comment:  ${item.short_desc}\nAction Taken By: Respondent\nAction Taken At:  ${item.updated_at}`
+      default:
+        return ''
     }
   }
 }

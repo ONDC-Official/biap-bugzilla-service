@@ -8,6 +8,7 @@ export interface ICreateBug {
   bpp_id: string
   bpp_name: string
   attachments: string[]
+  action: any
 }
 
 export interface ICreateUser {
