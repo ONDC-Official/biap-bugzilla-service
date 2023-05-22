@@ -59,7 +59,7 @@ class BugzillaBugService {
 
       const userResponse = await userService.getUser({ userId: data.bpp_id })
 
-      if (!userResponse?.data?.users[0]) {
+      if (!userResponse?.data?.users?.[0]) {
         await userService.createUser({
           email: `${data.bpp_name.trim().toLowerCase().replace(/\s/g, '')}@example.com`,
           full_name: data.bpp_name,
@@ -70,8 +70,10 @@ class BugzillaBugService {
       const serviceRes = await productService.getProduct({
         productId: `${data.product.toLowerCase().replace(/\s/g, '')}`,
       })
+      console.log('🚀 ~ file: bugzilla.service.ts:73 ~ BugzillaBugService ~ createBug ~ serviceRes:', serviceRes)
 
-      if (serviceRes?.data?.products[0]?.id) {
+      if (serviceRes?.data?.products?.[0]?.id) {
+        console.log('inside----------')
         isProductExist = true
       }
 

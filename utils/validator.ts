@@ -10,6 +10,7 @@ export function CreateBugSchemaValidator(bugObject: ICreateBug) {
     bpp_id: Joi.string().required(),
     bpp_name: Joi.string().required(),
     attachments: Joi.array().items(Joi.string()),
+    action: Joi.object(),
   })
 
   const { error } = schema.validate(bugObject)
