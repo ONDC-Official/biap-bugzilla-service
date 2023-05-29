@@ -69,8 +69,10 @@ class BugzillaBugService {
       const serviceRes = await productService.getProduct({
         productId: `${data.product.toLowerCase().replace(/\s/g, '')}`,
       })
+      console.log('🚀 ~ file: bugzilla.service.ts:73 ~ BugzillaBugService ~ createBug ~ serviceRes:', serviceRes)
 
-      if (serviceRes?.data?.products[0]?.id) {
+      if (serviceRes?.data?.products?.[0]?.id) {
+        console.log('inside----------')
         isProductExist = true
       }
 
