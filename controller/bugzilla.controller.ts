@@ -7,7 +7,7 @@ const mainService = new MainService()
 class BugsController {
   async createBug(req: Request, res: Response) {
     const data = await mainService.createIssue(req, res)
-    logger.info('POST Bugzilla Endpoint hit with: ' + req.body)
+    logger.info('POST Bugzilla Endpoint hit with: ' + JSON.stringify(req.body))
     return data
   }
 

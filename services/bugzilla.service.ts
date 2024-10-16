@@ -49,10 +49,17 @@ class BugzillaBugService {
       bpp_name: req.body.bpp_name,
       attachments: req.body.attachments,
       action: req.body.action,
+      network_issue_id: req.body.network_issue_id,
+      issue_sub_category: req.body.issue_sub_category,
+      issue_sub_category_long_desc: req.body.issue_sub_category_long_desc,
+      network_order_id: req.body.network_order_id,
+      network_item_id: req.body.network_item_id,
+      issue_desc: req.body?.description?.short_desc
     }
 
     try {
       const error = CreateBugSchemaValidator(data)
+      logger.info('Hitting1')
 
       if (error) return res.status(500).json({ error: true, message: error.message })
       logger.info('Hitting')

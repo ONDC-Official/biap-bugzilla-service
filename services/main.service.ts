@@ -9,10 +9,11 @@ const Trudesk = new TrudeskService()
 class MainService {
   async createIssue(req: any, res: any) {
     try {
+      console.log(process.env.SELECTED_ISSUE_CRM,"=========process.env.SELECTED_ISSUE_CRM")
       let data
       if (process.env.SELECTED_ISSUE_CRM === TRUDESK) {
         data = await Trudesk.createBug(req, res)
-        logger.info('POST Trudesk Endpoint hit with: ' + req.body)
+        logger.info('POST Trudesk Endpoint hit with: ' + JSON.stringify(req.body))
       } else {
         data = await BugService.createBug(req, res)
         logger.info('POST Bugzilla Endpoint hit with: ' + req.body)

@@ -85,13 +85,13 @@ class HttpRequest {
       console.log(err)
       if (err.response) {
         // The client was given an error response (5xx, 4xx)
-        console.log('Error response', err, '\n', err.response)
+        console.log('Error response nishtha ===============', err?.response?.data)
       } else if (err.request) {
         //` The client never received a response, and the request was never left
-        console.log('Error request', err, '\n', err.request)
+        console.log('Error request nishtha ===============', err?.request)
       } else {
         // Anything else
-        console.log('Error message', err, '\n', err.message)
+        console.log('Error message nishtha ===============', err?.message)
       }
 
       throw err?.response?.data?.message

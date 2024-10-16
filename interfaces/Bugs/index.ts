@@ -1,13 +1,19 @@
 export type priority = 'Enhancement' | 'Normal' | 'Minor' | 'Major' | 'Blocker' | 'Critical' | 'Trival'
 
 export interface ICreateBug {
-  product: string
-  summary: string
+  product: string              
+  issue_desc: string           
+  summary: string              
   alias: string
-  bpp_id: string
-  bpp_name: string
+  bpp_id: string               
+  bpp_name: string             
   attachments: string[]
-  action: any
+  action: any,
+  network_issue_id: string     
+  issue_sub_category: string   
+  issue_sub_category_long_desc: string   
+  network_order_id: string     
+  network_item_id: string
 }
 
 

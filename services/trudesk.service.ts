@@ -11,7 +11,7 @@ class TrudeskService {
 
   async addAttachments({ ticketId, data, ownerId }: { ticketId: string; data: string; ownerId: string }) {
     const attachmentRequest = new GetHttpRequest({
-      url: `/tickets/attachment`,
+      url: '/api/v1/tickets/attachment',
       method: 'post',
       data: {
         ticketId,
@@ -21,6 +21,7 @@ class TrudeskService {
     })
 
     const attachmentResponse = await attachmentRequest.send()
+    console.log("======",attachmentResponse,"===attachmentRequest=")
     return attachmentResponse
   }
 
@@ -36,9 +37,10 @@ class TrudeskService {
         },
       })
       const owner = await ownerApi.send()
-
+      console.log('owner ------ ')
       // To save the issue
       const { issues } = req.body
+      console.log(JSON.stringify(req.body),"==issues");
       const saveIssue = new GetHttpRequest({
         url: '/api/v1/issue/save',
         method: 'post',
@@ -60,6 +62,7 @@ class TrudeskService {
         },
       })
       const group = await fetchGroup.send()
+      console.log('group ------ ')
 
       // To fetch type and priority Id
       const fetchType = new GetHttpRequest({
@@ -70,7 +73,7 @@ class TrudeskService {
         },
       })
       const type = await fetchType.send()
-
+      console.log(req.body,"====req.body===")
       const createTicket = new GetHttpRequest({
         url: '/api/v1/tickets/create',
         method: 'post',
@@ -82,6 +85,14 @@ class TrudeskService {
           type: type.data[0]?._id,
           priority: type.data[0]?.priorities[0]?._id,
           transaction_id: req.body.alias,
+          bap_id: process.env.BAP_ID || "",
+          bpp_id: req?.body?.bpp_id ?? "",
+          network_issue_id: req?.body?.network_issue_id ?? "",
+          issue_sub_category: req?.body?.issue_sub_category ?? "",
+          issue_sub_category_long_desc: req?.body?.issue_sub_category_long_desc ?? "",
+          network_order_id: req?.body?.network_order_id ?? "",
+          network_item_id: req?.body?.network_item_id ?? "",
+          domain: req?.body?.domain ?? "",
         },
         headers: {
           accesstoken: owner?.data?.accessToken,
@@ -90,6 +101,7 @@ class TrudeskService {
       const response = await createTicket.send()
       if (req.body.attachments && req.body.attachments?.length !== 0) {
         req.body.attachments.map(async (_element: any, index: number) => {
+          console.log("===",req.body.attachments[index],"==req.body.attachments[index]")
           await this.addAttachments({
             ownerId: owner?.data?.user._id,
             ticketId: response?.data?.ticket?._id,
@@ -99,9 +111,13 @@ class TrudeskService {
       }
 
       const complaint_actions_merged = [...req.body.action.complainant_actions]
-
-      const comment = `\nComplainant-Action: ${complaint_actions_merged[0].complainant_action}\nComplainant-Action-Description:  ${complaint_actions_merged[0].short_desc}\nAction Taken By: Complainant\nComplainant-Name: ${complaint_actions_merged[0].updated_by.person.name}\nAction Taken At:  ${complaint_actions_merged[0].updated_at}`
-
+      const comment = `
+      Complainant Action: ${complaint_actions_merged?.[0]?.complainant_action ?? ""}
+      Complainant Action Description:  ${complaint_actions_merged?.[0]?.short_desc ?? ""}
+      Action Taken By: Complainant
+      Complainant Name: ${complaint_actions_merged?.[0]?.updated_by.person.name ?? ""}
+      Action Taken At:  ${complaint_actions_merged?.[0]?.updated_at ?? ""}
+      `
       await this.addComments({ _id: response.data.ticket._id, data: comment, accesstoken: owner?.data?.accessToken })
 
       return res.status(201).json({ success: true, data: response.data, alias: response.data.transaction_id })
@@ -281,6 +297,7 @@ class TrudeskService {
 
   generateTheCommentFromObject(item: any) {
     const keys = Object.keys(item)
+    console.log("===",keys,"=====keys=====",JSON.stringify(item),"=====",item,"=======")
     if (keys.includes('complainant_action')) {
       return `\nComplainant-Action: ${item.complainant_action}\nComplainant-Action-Description:  ${item.short_desc}\nAction Taken By: Complainant\nComplainant-Name: ${item.updated_by.person.name}\nAction Taken At:  ${item.updated_at}`
     } else if (keys.includes('respondent_action')) {
